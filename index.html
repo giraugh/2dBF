@@ -1,0 +1,22 @@
+<link rel="stylesheet" href="style.css"></link>
+<textarea id="input"></textarea>
+<button onclick="executeInput()">Execute</button>
+<textarea readonly id="output"></textarea>
+<script src="2dbf.js"></script>
+<script>
+  executeInput = function() {
+    //Get Stuff
+    bf = brainFuck2d()
+    inputE = document.getElementById("input")
+    outputE = document.getElementById("output")
+
+    //Execute Input
+    output = bf.execute(input.value)
+
+    //Write to output
+    if (output != undefined)
+      outputE.value = output
+    else
+      outputE.value = "no output"
+  }
+</script>

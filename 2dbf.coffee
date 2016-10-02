@@ -16,16 +16,109 @@ brainFuck2d = ->
   # Initialize BF Object
   bf = {}
 
-  gridSize = 200
+  gridSize = 2000
+
+  # Use numbers over char codes?
+  bf.num = false
 
   # Create 2d state array (init to zero)
-  bf.state = for x in [0...gridSize]
-    for y in [0...gridSize] then 0
+  bf.state = {}
+
+  # Used for getting state
+  bf.get = (p)->
+    x = "#{p[0]}"
+    y = "#{p[1]}"
+    if bf.state[x+y]
+      bf.state[x+y]
+    else
+      0
+
+  # Used for changing state
+  bf.change = (p, c)->
+    x = "#{p[0]}"
+    y = "#{p[1]}"
+    if bf.state[x+y]
+      bf.state[x+y] += c
+    else
+      bf.state[x+y] = c
 
   # Default pointer
   bf.pointer = [0, 0]
 
+  # Tokenize Input
+  bf.tokenize = (input)->
+    tokens = []
+    unmatched = 0
+    for ch, i in input
+      tok = switch ch
+        when ">"
+          "POINT_RIGHT"
+        when "<"
+          "POINT_LEFT"
+        when "/"
+          "POINT_UP"
+        when "\\"
+          "POINT_DOWN"
+        when "+"
+          "VAL_INC"
+        when "-"
+          "VAL_DEC"
+        when "."
+          "VAL_OUTPUT"
+        when ","
+          "VAL_INPUT"
+        when "["
+          unmatched++
+          "LOOP_OPEN"
+        when "]"
+          unmatched--
+          "LOOP_CLOSE"
+        else
+          undefined
+      if tok
+        tokens.push tok
+
+    if unmatched isnt 0
+      return "ERROR: Unmatched Loop"
+
+    return tokens
+
+  bf.parse = (tokens)->
+    instr = 0
+    point = [0, 0]
+    out = ""
+    loop
+      if instr > tokens.length
+        break
+      ins = tokens[instr]
+      switch ins
+        when "POINT_RIGHT"
+          point[0]++
+        when "POINT_LEFT"
+          point[0]--
+        when "POINT_DOWN"
+          point[1]++
+        when "POINT_UP"
+          point[1]--
+        when "VAL_INC"
+          @change point, +1
+        when "VAL_DEC"
+          @change point, -1
+        when "VAL_OUTPUT"
+          out += @get point #Need to change to use charcodes
+        when "VAL_INPUT"
+          @set point, prompt("Input","").charCodeAt(0) #only accepts single char
+      instr++
+    return out
+
   bf.execute = (input)->
-    console.log bf
+    #tokenize input and store it in bf.tokens
+    @tokens = @tokenize input
+    if typeof @tokens is "string" #ERROR
+      return @tokens
+
+    @result = @parse @tokens
+    console.log @result
+    return @result
 
   return bf

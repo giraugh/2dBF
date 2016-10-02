@@ -14,27 +14,122 @@ Two Dimensional Brain Fuck
 var brainFuck2d;
 
 brainFuck2d = function() {
-  var bf, gridSize, x, y;
+  var bf, gridSize;
   bf = {};
-  gridSize = 200;
-  bf.state = (function() {
-    var i, ref, results;
-    results = [];
-    for (x = i = 0, ref = gridSize; 0 <= ref ? i < ref : i > ref; x = 0 <= ref ? ++i : --i) {
-      results.push((function() {
-        var j, ref1, results1;
-        results1 = [];
-        for (y = j = 0, ref1 = gridSize; 0 <= ref1 ? j < ref1 : j > ref1; y = 0 <= ref1 ? ++j : --j) {
-          results1.push(0);
-        }
-        return results1;
-      })());
+  gridSize = 2000;
+  bf.num = false;
+  bf.state = {};
+  bf.get = function(p) {
+    var x, y;
+    x = "" + p[0];
+    y = "" + p[1];
+    if (bf.state[x + y]) {
+      return bf.state[x + y];
+    } else {
+      return 0;
     }
-    return results;
-  })();
+  };
+  bf.change = function(p, c) {
+    var x, y;
+    x = "" + p[0];
+    y = "" + p[1];
+    if (bf.state[x + y]) {
+      return bf.state[x + y] += c;
+    } else {
+      return bf.state[x + y] = c;
+    }
+  };
   bf.pointer = [0, 0];
+  bf.tokenize = function(input) {
+    var ch, i, j, len, tok, tokens, unmatched;
+    tokens = [];
+    unmatched = 0;
+    for (i = j = 0, len = input.length; j < len; i = ++j) {
+      ch = input[i];
+      tok = (function() {
+        switch (ch) {
+          case ">":
+            return "POINT_RIGHT";
+          case "<":
+            return "POINT_LEFT";
+          case "/":
+            return "POINT_UP";
+          case "\\":
+            return "POINT_DOWN";
+          case "+":
+            return "VAL_INC";
+          case "-":
+            return "VAL_DEC";
+          case ".":
+            return "VAL_OUTPUT";
+          case ",":
+            return "VAL_INPUT";
+          case "[":
+            unmatched++;
+            return "LOOP_OPEN";
+          case "]":
+            unmatched--;
+            return "LOOP_CLOSE";
+          default:
+            return void 0;
+        }
+      })();
+      if (tok) {
+        tokens.push(tok);
+      }
+    }
+    if (unmatched !== 0) {
+      return "ERROR: Unmatched Loop";
+    }
+    return tokens;
+  };
+  bf.parse = function(tokens) {
+    var ins, instr, out, point;
+    instr = 0;
+    point = [0, 0];
+    out = "";
+    while (true) {
+      if (instr > tokens.length) {
+        break;
+      }
+      ins = tokens[instr];
+      switch (ins) {
+        case "POINT_RIGHT":
+          point[0]++;
+          break;
+        case "POINT_LEFT":
+          point[0]--;
+          break;
+        case "POINT_DOWN":
+          point[1]++;
+          break;
+        case "POINT_UP":
+          point[1]--;
+          break;
+        case "VAL_INC":
+          this.change(point, +1);
+          break;
+        case "VAL_DEC":
+          this.change(point, -1);
+          break;
+        case "VAL_OUTPUT":
+          out += this.get(point);
+          break;
+        case "VAL_INPUT":
+          this.set(point, prompt("Input", "").charCodeAt(0));
+      }
+      instr++;
+    }
+    return out;
+  };
   bf.execute = function(input) {
-    return console.log(bf);
+    this.tokens = this.tokenize(input);
+    if (typeof this.tokens === "string") {
+      return this.tokens;
+    }
+    this.result = this.parse(this.tokens);
+    console.log(this.result);
+    return this.result;
   };
   return bf;
 };

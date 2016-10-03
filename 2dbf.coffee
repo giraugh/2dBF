@@ -24,6 +24,10 @@ brainFuck2d = ->
   # Create 2d state array (init to zero)
   bf.state = {}
 
+  # Direction Constants
+  bf.DIR_RIGHT = 1
+  bf.DIR_LEFT = -1
+
   # Used for getting state
   bf.get = (p)->
     x = "#{p[0]}"
@@ -83,42 +87,57 @@ brainFuck2d = ->
 
     return tokens
 
+  # Used to find the index of
+  # the next token in a direction
+  bf.find = (tokens, token, dir)->
+    cur = @instr
+    while (tokens[cur] != token)
+      cur+=dir
+    return cur
+
+  # Returns function that parses next token.
   bf.parse = (tokens)->
-    instr = 0
-    point = [0, 0]
-    out = ""
-    loop
-      if instr > tokens.length
-        break
-      ins = tokens[instr]
+    @tokens = tokens
+    @instr = 0
+    @point = [0, 0]
+    @out = ""
+    return ->
+      if @instr >= @tokens.length
+        return @out
+      ins = @tokens[@instr]
       switch ins
         when "POINT_RIGHT"
-          point[0]++
+          @point[0]++
         when "POINT_LEFT"
-          point[0]--
+          @point[0]--
         when "POINT_DOWN"
-          point[1]++
+          @point[1]++
         when "POINT_UP"
-          point[1]--
+          @point[1]--
         when "VAL_INC"
-          @change point, +1
+          @change @point, +1
         when "VAL_DEC"
-          @change point, -1
+          @change @point, -1
         when "VAL_OUTPUT"
-          out += @get point #Need to change to use charcodes
+          @out += @get @point # Need to change to use charcodes
         when "VAL_INPUT"
-          @set point, prompt("Input","").charCodeAt(0) #only accepts single char
-      instr++
-    return out
+          @set @point, prompt("Input","").charCodeAt(0) # only accepts single char
+        when "LOOP_OPEN"
+          # Skip to next close if val is zero
+          if @get(@point) is 0
+            @instr = bf.find(@tokens, "LOOP_CLOSE", @DIR_RIGHT)
+        when "LOOP_CLOSE"
+          @instr = bf.find(@tokens, "LOOP_OPEN", @DIR_LEFT)-1
+      @instr++
+      return undefined
 
+  #Returns parser based on input
   bf.execute = (input)->
-    #tokenize input and store it in bf.tokens
-    @tokens = @tokenize input
+    # tokenize input and store it in bf.tokens
+    tokens = @tokenize input
     if typeof @tokens is "string" #ERROR
       return @tokens
 
-    @result = @parse @tokens
-    console.log @result
-    return @result
+    return @parse(tokens).bind @
 
   return bf

@@ -11,13 +11,17 @@
     inputE = document.getElementById("input")
     outputE = document.getElementById("output")
 
-    //Execute Input
-    output = bf.execute(input.value)
+    //Get parse func
+    step = bf.execute(input.value)
 
-    //Write to output
-    if (output != undefined)
-      outputE.value = output
-    else
-      outputE.value = "no output"
+    function update() {
+      out = step()
+      if (out == undefined)
+        requestAnimationFrame(update)
+      else
+        outputE.value = out
+    }
+
+    update()
   }
 </script>

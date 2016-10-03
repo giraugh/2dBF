@@ -19,6 +19,8 @@ brainFuck2d = function() {
   gridSize = 2000;
   bf.num = false;
   bf.state = {};
+  bf.DIR_RIGHT = 1;
+  bf.DIR_LEFT = -1;
   bf.get = function(p) {
     var x, y;
     x = "" + p[0];
@@ -83,53 +85,69 @@ brainFuck2d = function() {
     }
     return tokens;
   };
+  bf.find = function(tokens, token, dir) {
+    var cur;
+    cur = this.instr;
+    while (tokens[cur] !== token) {
+      cur += dir;
+    }
+    return cur;
+  };
   bf.parse = function(tokens) {
-    var ins, instr, out, point;
-    instr = 0;
-    point = [0, 0];
-    out = "";
-    while (true) {
-      if (instr > tokens.length) {
-        break;
+    this.tokens = tokens;
+    this.instr = 0;
+    this.point = [0, 0];
+    this.out = "";
+    return function() {
+      var ins;
+      if (this.instr >= this.tokens.length) {
+        return this.out;
       }
-      ins = tokens[instr];
+      ins = this.tokens[this.instr];
       switch (ins) {
         case "POINT_RIGHT":
-          point[0]++;
+          this.point[0]++;
           break;
         case "POINT_LEFT":
-          point[0]--;
+          this.point[0]--;
           break;
         case "POINT_DOWN":
-          point[1]++;
+          this.point[1]++;
           break;
         case "POINT_UP":
-          point[1]--;
+          this.point[1]--;
           break;
         case "VAL_INC":
-          this.change(point, +1);
+          this.change(this.point, +1);
           break;
         case "VAL_DEC":
-          this.change(point, -1);
+          this.change(this.point, -1);
           break;
         case "VAL_OUTPUT":
-          out += this.get(point);
+          this.out += this.get(this.point);
           break;
         case "VAL_INPUT":
-          this.set(point, prompt("Input", "").charCodeAt(0));
+          this.set(this.point, prompt("Input", "").charCodeAt(0));
+          break;
+        case "LOOP_OPEN":
+          if (this.get(this.point) === 0) {
+            this.instr = bf.find(this.tokens, "LOOP_CLOSE", this.DIR_RIGHT);
+          }
+          break;
+        case "LOOP_CLOSE":
+          this.instr = bf.find(this.tokens, "LOOP_OPEN", this.DIR_LEFT) - 1;
       }
-      instr++;
-    }
-    return out;
+      this.instr++;
+      return void 0;
+    };
   };
   bf.execute = function(input) {
-    this.tokens = this.tokenize(input);
+    var tokens;
+    tokens = this.tokenize(input);
     if (typeof this.tokens === "string") {
       return this.tokens;
     }
-    this.result = this.parse(this.tokens);
-    console.log(this.result);
-    return this.result;
+    return this.parse(tokens).bind(this);
   };
   return bf;
 };

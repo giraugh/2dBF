@@ -18,7 +18,7 @@ brainFuck2d = ->
 
   gridSize = 2000
 
-  # Use numbers over char codes?
+  # Add 48 to output?
   bf.num = false
 
   # Create 2d state array (init to zero)
@@ -119,7 +119,9 @@ brainFuck2d = ->
         when "VAL_DEC"
           @change @point, -1
         when "VAL_OUTPUT"
-          @out += @get @point # Need to change to use charcodes
+          ch = @get(@point)
+          ch += 48 if @num
+          @out += String.fromCharCode(ch)
         when "VAL_INPUT"
           @set @point, prompt("Input","").charCodeAt(0) # only accepts single char
         when "LOOP_OPEN"
@@ -135,8 +137,8 @@ brainFuck2d = ->
   bf.execute = (input)->
     # tokenize input and store it in bf.tokens
     tokens = @tokenize input
-    if typeof @tokens is "string" #ERROR
-      return @tokens
+    if typeof tokens is "string" #ERROR
+      return tokens
 
     return @parse(tokens).bind @
 

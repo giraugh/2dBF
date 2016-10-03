@@ -99,7 +99,7 @@ brainFuck2d = function() {
     this.point = [0, 0];
     this.out = "";
     return function() {
-      var ins;
+      var ch, ins;
       if (this.instr >= this.tokens.length) {
         return this.out;
       }
@@ -124,7 +124,11 @@ brainFuck2d = function() {
           this.change(this.point, -1);
           break;
         case "VAL_OUTPUT":
-          this.out += this.get(this.point);
+          ch = this.get(this.point);
+          if (this.num) {
+            ch += 48;
+          }
+          this.out += String.fromCharCode(ch);
           break;
         case "VAL_INPUT":
           this.set(this.point, prompt("Input", "").charCodeAt(0));
@@ -144,8 +148,8 @@ brainFuck2d = function() {
   bf.execute = function(input) {
     var tokens;
     tokens = this.tokenize(input);
-    if (typeof this.tokens === "string") {
-      return this.tokens;
+    if (typeof tokens === "string") {
+      return tokens;
     }
     return this.parse(tokens).bind(this);
   };

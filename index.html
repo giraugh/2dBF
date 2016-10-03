@@ -13,12 +13,21 @@
 
     //Get parse func
     step = bf.execute(input.value)
+    if (typeof step == "string") {
+      outputE.value = step
+      return undefined
+    }
+
+    //set output to ...
+    outputE.value = "..."
 
     function update() {
       out = step()
       if (out == undefined)
         requestAnimationFrame(update)
       else
+        if (out == "")
+          out = "no output"
         outputE.value = out
     }
 
